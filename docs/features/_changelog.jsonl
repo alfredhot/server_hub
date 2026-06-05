@@ -1,3 +1,4 @@
 {"ts":"2026-06-05","action":"added","key":"notes","summary":"示例速记功能：note 表 + 读写守卫接口 + 页面，跑通功能扩展闭环"}
 {"ts":"2026-06-05","action":"added","key":"downloader","summary":"占位登记：Telegram 媒体下载器（规划中）"}
 {"ts":"2026-06-05","action":"added","key":"webhook","summary":"占位登记：Webhook→Telegram 通知中枢（规划中）"}
+{"ts":"2026-06-05","action":"added","key":"beszel","summary":"外链功能：Beszel 服务器监控面板（https://beszel.alfred.co.kr），新标签打开，默认仅 admin 可见"}

@@ -8,6 +8,7 @@ export default defineEventHandler(async (event) => {
     icon: feature.icon,
     route: feature.route,
     comingSoon: feature.comingSoon ?? false,
+    external: feature.external ?? false,
     permissions
   }))
 })

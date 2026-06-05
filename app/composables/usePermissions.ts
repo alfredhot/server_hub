@@ -5,6 +5,7 @@ export interface VisibleFeature {
   icon: string
   route: string
   comingSoon: boolean
+  external: boolean
   permissions: string[]
 }
 

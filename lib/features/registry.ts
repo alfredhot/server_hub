@@ -17,6 +17,8 @@ export interface FeatureDef {
   defaultByRole: Partial<Record<Role, string[] | 'all' | false>>
   /** Marks a placeholder feature whose page is not built yet. */
   comingSoon?: boolean
+  /** External link: route is a full URL, opened in a new tab. */
+  external?: boolean
 }
 
 export const FEATURES: FeatureDef[] = [
@@ -48,6 +50,16 @@ export const FEATURES: FeatureDef[] = [
     permissions: ['read', 'write'],
     defaultByRole: { admin: 'all', user: false, guest: false },
     comingSoon: true
+  },
+  {
+    key: 'beszel',
+    title: 'Beszel 监控',
+    description: '服务器资源监控面板（外部）',
+    icon: 'i-lucide-gauge',
+    route: 'https://beszel.alfred.co.kr',
+    external: true,
+    permissions: ['open'],
+    defaultByRole: { admin: 'all', user: false, guest: false }
   }
 ]
 

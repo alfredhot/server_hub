@@ -1,0 +1,17 @@
+{
+  "key": "notes",
+  "status": "active",
+  "summary": "随手记 + 时间线，按用户隔离的速记功能",
+  "endpoints": [
+    "GET /api/features/notes",
+    "POST /api/features/notes",
+    "DELETE /api/features/notes/:id"
+  ],
+  "tables": ["note"],
+  "files": [
+    "app/pages/f/notes.vue",
+    "server/api/features/notes/*"
+  ],
+  "updated": "2026-06-05",
+  "notes": "首个真实功能，作为新功能扩展的样板（见 docs/BUILD.md §11）"
+}

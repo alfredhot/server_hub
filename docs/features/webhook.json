@@ -1,0 +1,10 @@
+{
+  "key": "webhook",
+  "status": "planned",
+  "summary": "Webhook → Telegram 通知中枢（占位，尚未实现）",
+  "endpoints": [],
+  "tables": [],
+  "files": [],
+  "updated": "2026-06-05",
+  "notes": "规划中：参考 home_hub 的 webhook 模块迁移"
+}

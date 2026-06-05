@@ -1,0 +1,3 @@
+{"ts":"2026-06-05","action":"added","key":"notes","summary":"示例速记功能：note 表 + 读写守卫接口 + 页面，跑通功能扩展闭环"}
+{"ts":"2026-06-05","action":"added","key":"downloader","summary":"占位登记：Telegram 媒体下载器（规划中）"}
+{"ts":"2026-06-05","action":"added","key":"webhook","summary":"占位登记：Webhook→Telegram 通知中枢（规划中）"}

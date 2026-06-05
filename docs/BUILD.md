@@ -6,6 +6,8 @@
 
 参考来源：家里那台 `home_hub`（FastAPI + Jinja2 + SQLite 单 admin）。本项目沿用其「单容器 + SQLite + Tailwind + 服务端会话」的思路，但把认证升级为**多用户 + RBAC + 功能注册表**。
 
+> **部署形态（已定）**：**全 Docker**。业务服务（hub）与**边缘反代 Caddy 分离**：Caddy 独立部署在 `~/caddy`，通过共享 Docker 网络 `edge` 反代到各业务容器；线上域名 **`hub.alfred.co.kr`**。详见 §9。
+
 ---
 
 ## 1. 技术栈（最终选型）
@@ -18,36 +20,46 @@
 | 权限 | better-auth **access control**（角色）+ 自建**功能授权表**（逐用户覆盖） | 角色给默认能力，按用户细调具体功能开关与权限 |
 | ORM | **Drizzle ORM** | 轻量、TS 原生、迁移清晰 |
 | 数据库 | **SQLite**（`better-sqlite3` 驱动，WAL 模式） | 单文件、零运维、备份=复制文件；后期可平滑迁 Postgres |
-| 部署 | **Docker 单容器** + **Caddy**（自动 HTTPS） | ARM64 友好；公网可访问但全站需登录 |
+| 反代 / HTTPS | **Caddy**（独立边缘 stack，`~/caddy`） | 对比过 Nginx Proxy Manager / Traefik;选 Caddy:配置即代码、可进 git、默认 HTTP/3、**自动签发+自动续签**、单二进制无 DB |
+| 部署 | **全 Docker**（业务容器 + 边缘 Caddy，共享 `edge` 网络） | ARM64 友好；公网仅 Caddy 的 80/443 一个入口，业务容器不直接暴露端口 |
 
 > 运行环境已确认：Oracle Cloud **ARM64 (Ampere)**、Ubuntu 24.04、3 核 / 17GB、Docker + Node 22 就绪。资源充裕。
+> 宿主机**无需安装 Node/npm**：镜像构建在 Docker 内完成。
 
 ---
 
 ## 2. 整体架构
 
+**拓扑（反代与业务分离，经共享 `edge` 网络互通）：**
+
 ```
-                         ┌──────────────────────────────────────┐
-   浏览器 ──HTTPS──▶ Caddy ──▶ Nuxt(Nitro) 服务进程
-                         │                                      │
-                         │  app/        (Vue 页面/组件, SSR)      │
-                         │   ├─ /login                           │
-                         │   ├─ /              hub 首页(功能卡片) │
-                         │   ├─ /f/<feature>   各功能模块页       │
-                         │   └─ /admin/*       用户/权限管理后台  │
-                         │                                      │
-                         │  server/                              │
-                         │   ├─ /api/auth/[...all]  better-auth   │
-                         │   ├─ /api/admin/*        用户/授权管理  │
-                         │   ├─ /api/features/*     各功能后端     │
-                         │   └─ middleware/auth     全局认证守卫   │
-                         │                                      │
-                         │  lib/auth.ts  better-auth 实例(admin+AC)│
-                         │  lib/features/  功能注册表(扩展核心)    │
-                         │  db/  Drizzle schema + SQLite 文件      │
-                         └──────────────────────────────────────┘
-                                        │
-                                  data/hub.db (WAL)  ← 持久化卷
+                ┌──────────────────────┐   edge 网络   ┌───────────────────────────────┐
+  浏览器 ─HTTPS─▶│  ~/caddy（边缘反代）   │──────────────▶│  ~/server_hub（业务）           │
+   443/80       │  Caddy  :80 :443      │   hub:3000    │  Nuxt(Nitro) 服务进程           │
+                │  自动签发 / 自动续签   │               │                                │
+                └──────────────────────┘               └───────────────────────────────┘
+   公网仅此一个入口                                                     │
+                                                               data/hub.db (WAL)  ← 持久化卷
+```
+
+**业务进程（Nuxt/Nitro）内部：**
+
+```
+  app/        (Vue 页面/组件, SSR)
+   ├─ /login
+   ├─ /              hub 首页(功能卡片)
+   ├─ /f/<feature>   各功能模块页
+   └─ /admin/*       用户/权限管理后台
+
+  server/
+   ├─ /api/auth/[...all]  better-auth handler
+   ├─ /api/admin/*        用户/授权管理
+   ├─ /api/features/*     各功能后端
+   └─ middleware/0.auth   全局认证守卫
+
+  lib/auth.ts      better-auth 实例(admin + access control)
+  lib/features/    功能注册表(扩展核心)
+  db/              Drizzle schema + SQLite 文件
 ```
 
 **请求与认证流程**（对应你的「新浏览器需输入账号密码」需求）：
@@ -181,7 +193,7 @@ export const FEATURES: FeatureDef[] = [
 ## 6. 目录结构
 
 ```
-server_hub/
+server_hub/                       # 业务项目（不含 caddy）
 ├── app/                          # Nuxt 4 前端（默认 srcDir）
 │   ├── pages/
 │   │   ├── index.vue             # hub 首页：按权限渲染功能卡片
@@ -222,10 +234,13 @@ server_hub/
 ├── nuxt.config.ts
 ├── drizzle.config.ts
 ├── Dockerfile
-├── docker-compose.yml
-├── Caddyfile
+├── docker-compose.yml             # 仅 hub，接入外部 edge 网络（无 caddy）
 ├── .env / .env.example
 └── docs/BUILD.md                  # 本文档
+
+~/caddy/                          # 边缘反代（独立，与 server_hub 平级）
+├── docker-compose.yml            # 仅 caddy，占用 80/443
+└── Caddyfile                     # 所有域名路由集中在此
 ```
 
 ---
@@ -356,7 +371,7 @@ npm i -D drizzle-kit @better-auth/cli
 
 # 4) 配 .env
 #    BETTER_AUTH_SECRET=<openssl rand -base64 32>
-#    BETTER_AUTH_URL=http://localhost:3000   # 上线改成你的域名
+#    BETTER_AUTH_URL=https://hub.alfred.co.kr   # 本地开发时用 http://localhost:3000
 #    DATABASE_URL=./data/hub.db
 #    ADMIN_EMAIL=you@example.com
 #    ADMIN_PASSWORD=<首次启动用于初始化主账号>
@@ -376,12 +391,80 @@ npm run dev      # http://localhost:3000，用 ADMIN_EMAIL/PASSWORD 登录
 ```
 
 > 主账号初始化采用「环境变量 + 幂等 seed」(对齐 home_hub 的 `ensure_admin_user` 思路):首次启动若不存在该邮箱用户则创建并赋 `admin` 角色;**登录后立即改密码**。
+> 注:上述 `npm`/`npx` 是**本地开发**用;**线上一律 Docker**,宿主机不需要装 Node/npm(§9)。
 
 ---
 
-## 9. 部署（单容器 + Caddy 自动 HTTPS）
+## 9. 部署（全 Docker：独立边缘反代 Caddy + 业务服务）
 
-**Dockerfile**(多阶段,产出 Nuxt 精简产物):
+**反代选型已定**:经对比 Nginx Proxy Manager / Traefik,选 **Caddy**——配置即代码(进 git、可复现)、默认 HTTP/3、**ACME 自动签发 + 自动续签**(无需 cron/certbot)、单二进制无 DB。
+
+**形态**:**Caddy 独立成边缘 stack 放在 `~/caddy`**,与各业务项目平级;业务容器经共享外部网络 `edge` 被反代。**公网仅 Caddy 的 80/443 一个入口**,业务容器不直接暴露端口。线上域名 **`hub.alfred.co.kr`**。
+
+> SSL 续签:Caddy 在证书到期前 ~30 天自动续期,全程零人工。
+> 证书存于 `caddy_data` 卷,与业务项目解耦,重装 server_hub 不影响证书(也避免触发 Let's Encrypt 限流)。
+
+### 9.1 一次性：创建共享网络
+
+```bash
+docker network create edge
+```
+
+### 9.2 `~/caddy/docker-compose.yml`
+
+```yaml
+services:
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data        # 证书持久化（必须）
+      - caddy_config:/config
+    networks: [edge]
+
+networks:
+  edge:
+    external: true              # 用上面手动建的网络
+volumes:
+  caddy_data: {}
+  caddy_config: {}
+```
+
+### 9.3 `~/caddy/Caddyfile`
+
+```caddyfile
+hub.alfred.co.kr {
+    encode zstd gzip
+    reverse_proxy hub:3000      # hub = server_hub 的服务名（同 edge 网络解析）
+}
+
+# 以后加新服务，在这里续 block，各自自动签发/续签：
+# notes.alfred.co.kr { reverse_proxy notes-app:4000 }
+```
+
+### 9.4 `~/server_hub/docker-compose.yml`（业务，无 caddy）
+
+```yaml
+services:
+  hub:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - DATABASE_URL=/app/data/hub.db
+    expose: ["3000"]            # 不 published，只在 edge 网内可达
+    volumes:
+      - ./data:/app/data        # SQLite 持久化（必需）
+    networks: [edge]
+
+networks:
+  edge:
+    external: true              # 接入同一网络，Caddy 才找得到 hub
+```
+
+### 9.5 `~/server_hub/Dockerfile`（hub 镜像，多阶段）
 
 ```dockerfile
 # 构建阶段
@@ -404,50 +487,38 @@ EXPOSE 3000
 CMD ["sh","-c","node .output/server/scripts/migrate.mjs && node .output/server/index.mjs"]
 ```
 
-**docker-compose.yml**:
-
-```yaml
-services:
-  hub:
-    build: .
-    restart: unless-stopped
-    env_file: .env
-    environment:
-      - DATABASE_URL=/app/data/hub.db
-    volumes:
-      - ./data:/app/data         # SQLite 持久化（必需）
-    expose: ["3000"]
-
-  caddy:
-    image: caddy:2
-    restart: unless-stopped
-    ports: ["80:80", "443:443"]
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on: [hub]
-
-volumes:
-  caddy_data:
-  caddy_config:
-```
-
-**Caddyfile**(把 `hub.example.com` 换成你的域名,Caddy 自动签发/续期证书):
-
-```
-hub.example.com {
-    encode zstd gzip
-    reverse_proxy hub:3000
-}
-```
+### 9.6 启动
 
 ```bash
-docker compose up -d --build
+# 先起边缘反代
+cd ~/caddy && docker compose up -d
+# 再起业务
+cd ~/server_hub && docker compose up -d --build
 ```
 
-> **安全基线**:全站默认需登录(中间件已覆盖);`disableSignUp` 关自助注册;Caddy 强制 HTTPS;`BETTER_AUTH_SECRET` 用强随机;`data/` 仅容器卷,不进 git;朋友账号建议用 `guest` 角色 + 按需授予单个功能。
-> **更私密的可选项**:不暴露公网,改用 Tailscale,Caddy 只监听内网——但朋友也要装 Tailscale。当前默认走公网+登录,最适合「偶尔邀请朋友」。
+启动顺序其实随意(同在 `edge` 网络);`docker compose down` 业务时 Caddy 不受影响。
+
+### 9.7 Oracle Cloud 端口放行（必做，否则签不下证书）
+
+Oracle 默认实例 iptables 很严,**两层都要放行 TCP 80 / 443**:
+
+```bash
+# 1) 控制台：VCN → Security List（或 NSG）放行入站 TCP 80、443（0.0.0.0/0）
+# 2) 实例内 iptables：
+sudo iptables -I INPUT 6 -p tcp -m multiport --dports 80,443 -j ACCEPT
+sudo netfilter-persistent save
+```
+
+ACME 的 HTTP-01 验证走 80 口,**80 必须通**。另确认 `hub.alfred.co.kr` 的 A/AAAA 记录已指向本机公网 IP 并生效(`dig hub.alfred.co.kr`)。
+
+### 9.8 安全基线
+
+- 全站默认需登录(中间件已覆盖);`disableSignUp` 关自助注册;`BETTER_AUTH_SECRET` 用强随机。
+- 业务容器只 `expose` 不 `ports`,公网唯一入口是 Caddy。
+- `data/`、`.env` 不进 git;朋友账号用 `guest` 角色 + 按需授予单个功能。
+- 更私密的可选项:不暴露公网,改用 Tailscale + Caddy 内网监听(朋友也要装 Tailscale)。当前默认公网 + 登录,最适合「偶尔邀请朋友」。
+
+> 关于通配符证书:若以后想用 `*.alfred.co.kr`,需走 DNS-01,要用**带对应 DNS 插件的 Caddy 镜像**(如 Cloudflare 用 `caddy-dns/cloudflare`)。当前给具体子域走默认 HTTP-01,标准 `caddy:2` 即可。
 
 ---
 
@@ -456,7 +527,8 @@ docker compose up -d --build
 - **改代码**:`npm run dev`,Vite HMR 保存即生效。
 - **改数据模型**:改 `db/schema.app.ts` → `npx drizzle-kit generate` 产出迁移 → `migrate` 应用。迁移文件提交 git,容器启动时自动 `migrate`(对齐 home_hub 的「迁移随启动执行」)。
 - **加功能**:见 §5 / §11。
-- **备份**:`cp data/hub.db* backup/` 或 `sqlite3 data/hub.db .dump > backup.sql`。
+- **加新服务到反代**:在 `~/caddy/Caddyfile` 续一个 site block,新服务 compose 接入 `edge` 网络,`cd ~/caddy && docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile`(或重启 caddy)。
+- **备份**:`cp data/hub.db* backup/` 或 `sqlite3 data/hub.db .dump > backup.sql`;证书在 `caddy_data` 卷,`docker run --rm -v caddy_data:/d -v $PWD:/b alpine tar czf /b/caddy_data.tgz -C /d .`。
 
 ---
 
@@ -498,7 +570,7 @@ docker compose up -d --build
 | **M2 权限框架** | 功能注册表 + featureGrant 表 + 有效权限计算 + 守卫(前后端) |
 | **M3 管理后台** | `/admin/users`:创建/封禁/改角色 + 逐用户功能授权 UI |
 | **M4 首个功能** | 用 §11 流程落一个真实功能(如速记或一个你常用的小工具),验证扩展闭环 |
-| **M5 部署** | Docker + Caddy 上线到 Oracle ARM,域名 + 自动 HTTPS |
+| **M5 部署** | `~/caddy` 边缘反代 + server_hub 业务容器上线到 Oracle ARM,`hub.alfred.co.kr` 自动 HTTPS |
 | **M6 增强(按需)** | 2FA/Passkey、审计日志、设备信任、把 home_hub 的某些模块搬进来 |
 
 ---
@@ -513,4 +585,4 @@ docker compose up -d --build
 | 单 admin | 角色(admin/user/guest)+ 功能授权 | 新增能力 |
 | Jinja2 模板 | Vue 3 + Nuxt UI | 模板心智相近 |
 | Alembic 随启动迁移 | drizzle-kit 随启动迁移 | 同思路 |
-| 单容器 + SQLite | 单容器 + SQLite | 一致 |
+| 单容器 + SQLite | 业务单容器 + SQLite | 一致;反代独立到 ~/caddy |

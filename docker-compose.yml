@@ -1,0 +1,18 @@
+services:
+  hub:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - DATABASE_URL=/app/data/hub.db
+    # Not published — only reachable on the shared "edge" network via Caddy.
+    expose:
+      - "3000"
+    volumes:
+      - ./data:/app/data
+    networks:
+      - edge
+
+networks:
+  edge:
+    external: true

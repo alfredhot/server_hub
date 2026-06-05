@@ -1,0 +1,7 @@
+hub.alfred.co.kr {
+	encode zstd gzip
+	reverse_proxy hub:3000
+}
+
+# Add more services here, each gets automatic HTTPS + renewal:
+# notes.alfred.co.kr { reverse_proxy notes-app:4000 }

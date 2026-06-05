@@ -1,1 +1,19 @@
+# dependencies
+node_modules
+
+# nuxt
+.nuxt
+.output
+.data
+dist
+
+# env & data
+.env
+.env.*
+!.env.example
+data/
+
+# logs & misc
+*.log
+.DS_Store
 .claude/

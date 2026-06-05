@@ -1,0 +1,38 @@
+{
+  "name": "server-hub",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "lint": "eslint .",
+    "typecheck": "nuxt typecheck",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "auth:generate": "better-auth generate --config lib/auth.ts --output db/schema.auth.ts -y",
+    "seed:admin": "node --env-file=.env --import tsx scripts/seed-admin.ts"
+  },
+  "dependencies": {
+    "@iconify-json/lucide": "^1.2.111",
+    "@iconify-json/simple-icons": "^1.2.84",
+    "@nuxt/ui": "^4.8.1",
+    "better-auth": "^1.3.0",
+    "better-sqlite3": "^12.2.0",
+    "drizzle-orm": "^0.45.2",
+    "nanoid": "^5.0.0",
+    "nuxt": "^4.4.6",
+    "tailwindcss": "^4.3.0"
+  },
+  "devDependencies": {
+    "@better-auth/cli": "^1.3.0",
+    "@nuxt/eslint": "^1.15.2",
+    "@types/better-sqlite3": "^7.6.12",
+    "drizzle-kit": "^0.31.4",
+    "eslint": "^10.4.1",
+    "tsx": "^4.19.0",
+    "typescript": "^6.0.3",
+    "vue-tsc": "^3.3.3"
+  }
+}

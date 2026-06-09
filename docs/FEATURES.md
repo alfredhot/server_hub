@@ -6,10 +6,21 @@
 
 | 功能 | key | 状态 | 入口 | 权限 | 摘要 |
 |------|-----|------|------|------|------|
+| 账号设置 | `account` | ✅ 可用 | — | — | 用户自助修改登录密码（所有登录用户可用，不受功能权限限制） |
 | Beszel 监控 | `beszel` | ✅ 可用 | https://beszel.alfred.co.kr | open | 外部链接：Beszel 服务器资源监控面板 |
 | 文件下载器 | `downloader` | 🚧 规划中 | /f/downloader | read, write | Telegram 媒体下载器（占位，尚未实现） |
+| Grafana | `grafana` | ✅ 可用 | https://grafana.alfred.co.kr | open | 外部链接：Grafana 监控可视化仪表盘 |
 | 速记 | `notes` | ✅ 可用 | /f/notes | read, write | 随手记 + 时间线，按用户隔离的速记功能 |
 | 通知中枢 | `webhook` | 🚧 规划中 | /f/webhook | read, write | Webhook → Telegram 通知中枢（占位，尚未实现） |
+
+## 账号设置 `account`
+
+- **状态**：✅ 可用
+- **摘要**：用户自助修改登录密码（所有登录用户可用，不受功能权限限制）
+- **接口**：`POST /api/auth/change-password (better-auth)`
+- **主要文件**：`app/pages/account.vue`、`app/layouts/default.vue (顶栏入口)`
+- **备注**：入口：顶栏齿轮图标 / 用户名 → /account。非 registry 功能（账号级自助，人人可用，不进权限编辑器）。用 better-auth changePassword，校验当前密码、新密码≥8 位，改密后吊销其他设备会话（revokeOtherSessions）。
+- **更新于**：2026-06-09
 
 ## Beszel 监控 `beszel`
 
@@ -29,6 +40,16 @@
 - **摘要**：Telegram 媒体下载器（占位，尚未实现）
 - **备注**：规划中：参考 home_hub 的 telegram 模块迁移
 - **更新于**：2026-06-05
+
+## Grafana `grafana`
+
+- **状态**：✅ 可用
+- **入口**：https://grafana.alfred.co.kr
+- **权限**：open
+- **摘要**：外部链接：Grafana 监控可视化仪表盘
+- **主要文件**：`lib/features/registry.ts (entry)`
+- **备注**：外链功能：点击在新标签打开 Grafana；hub 仅作启动入口，Grafana 有自己的登录。默认仅 admin 可见，可在 /admin/users 给指定用户授予 open。
+- **更新于**：2026-06-09
 
 ## 速记 `notes`
 
@@ -53,6 +74,8 @@
 
 ## 最近变更
 
+- `2026-06-09` **added** `grafana` — 外链功能：Grafana 监控可视化仪表盘（https://grafana.alfred.co.kr），新标签打开，默认仅 admin 可见
+- `2026-06-09` **added** `account` — 账号设置页：用户自助修改密码（/account，better-auth changePassword，改密后吊销其他会话）
 - `2026-06-05` **added** `beszel` — 外链功能：Beszel 服务器监控面板（https://beszel.alfred.co.kr），新标签打开，默认仅 admin 可见
 - `2026-06-05` **added** `webhook` — 占位登记：Webhook→Telegram 通知中枢（规划中）
 - `2026-06-05` **added** `downloader` — 占位登记：Telegram 媒体下载器（规划中）

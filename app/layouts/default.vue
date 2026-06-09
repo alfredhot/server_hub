@@ -35,12 +35,23 @@ const initial = computed(() =>
             size="sm"
           />
           <UColorModeButton />
-          <div class="mx-1 hidden items-center gap-2 sm:flex">
+          <NuxtLink
+            to="/account"
+            class="mx-1 hidden items-center gap-2 rounded-full py-1 pl-1 pr-2 transition hover:bg-elevated sm:flex"
+          >
             <span class="flex size-7 items-center justify-center rounded-full bg-gradient-to-br from-zinc-100 to-zinc-200 text-xs font-semibold text-zinc-600">
               {{ initial }}
             </span>
             <span class="text-sm text-muted">{{ user?.name || user?.email }}</span>
-          </div>
+          </NuxtLink>
+          <UButton
+            to="/account"
+            icon="i-lucide-settings"
+            color="neutral"
+            variant="ghost"
+            size="sm"
+            aria-label="账号设置"
+          />
           <UButton
             icon="i-lucide-log-out"
             color="neutral"

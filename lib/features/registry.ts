@@ -60,6 +60,16 @@ export const FEATURES: FeatureDef[] = [
     external: true,
     permissions: ['open'],
     defaultByRole: { admin: 'all', user: false, guest: false }
+  },
+  {
+    key: 'grafana',
+    title: 'Grafana',
+    description: '监控可视化仪表盘（外部）',
+    icon: 'i-simple-icons-grafana',
+    route: 'https://grafana.alfred.co.kr',
+    external: true,
+    permissions: ['open'],
+    defaultByRole: { admin: 'all', user: false, guest: false }
   }
 ]
 

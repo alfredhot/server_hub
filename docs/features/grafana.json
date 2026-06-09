@@ -1,0 +1,14 @@
+{
+  "key": "grafana",
+  "status": "active",
+  "summary": "外部链接：Grafana 监控可视化仪表盘",
+  "external": true,
+  "url": "https://grafana.alfred.co.kr",
+  "endpoints": [],
+  "tables": [],
+  "files": [
+    "lib/features/registry.ts (entry)"
+  ],
+  "updated": "2026-06-09",
+  "notes": "外链功能：点击在新标签打开 Grafana；hub 仅作启动入口，Grafana 有自己的登录。默认仅 admin 可见，可在 /admin/users 给指定用户授予 open。"
+}

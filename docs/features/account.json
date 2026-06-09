@@ -1,0 +1,17 @@
+{
+  "key": "account",
+  "status": "active",
+  "title": "账号设置",
+  "summary": "用户自助修改登录密码（所有登录用户可用，不受功能权限限制）",
+  "permissions": [],
+  "endpoints": [
+    "POST /api/auth/change-password (better-auth)"
+  ],
+  "tables": [],
+  "files": [
+    "app/pages/account.vue",
+    "app/layouts/default.vue (顶栏入口)"
+  ],
+  "updated": "2026-06-09",
+  "notes": "入口：顶栏齿轮图标 / 用户名 → /account。非 registry 功能（账号级自助，人人可用，不进权限编辑器）。用 better-auth changePassword，校验当前密码、新密码≥8 位，改密后吊销其他设备会话（revokeOtherSessions）。"
+}

@@ -1,14 +1,21 @@
+# 个人功能中枢：开发即生产，直接以 Nuxt dev（含 HMR）部署 —— 改源码即时生效，无需 build。
+# 用法：docker compose up -d   （改完代码不用动它，HMR 自动更新页面）
 services:
   hub:
-    build: .
+    image: node:22-slim
+    working_dir: /app
     restart: unless-stopped
+    user: "1002:1002"
+    command: sh -c "npm run dev -- --host 0.0.0.0"
     env_file: .env
     environment:
       - DATABASE_URL=/app/data/hub.db
+      - HMR_HOST=hub.alfred.co.kr   # Vite HMR 走 wss://hub.alfred.co.kr（见 nuxt.config.ts）
     # Not published — only reachable on the shared "edge" network via Caddy.
     expose:
       - "3000"
     volumes:
+      - .:/app           # 源码 + node_modules（host 与容器同为 arm64/node22，直接复用）
       - ./data:/app/data
     networks:
       - edge

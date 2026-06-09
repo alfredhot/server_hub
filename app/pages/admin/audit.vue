@@ -22,17 +22,17 @@ function fmt(ts: string | number) {
 
 <template>
   <div>
-    <h1 class="mb-4 text-xl font-bold text-highlighted">审计日志</h1>
+    <h1 class="mb-6 text-2xl font-semibold tracking-tight text-highlighted">审计日志</h1>
 
     <div
       v-if="!rows?.length"
-      class="rounded-xl border border-dashed border-default py-16 text-center text-muted"
+      class="rounded-2xl border border-dashed border-default py-16 text-center text-muted"
     >
       暂无记录
     </div>
 
-    <div v-else class="divide-y divide-default rounded-xl border border-default bg-default">
-      <div v-for="r in rows" :key="r.id" class="flex items-center justify-between gap-4 p-3 text-sm">
+    <div v-else class="divide-y divide-zinc-200/60 overflow-hidden rounded-2xl bg-default shadow-sm ring-1 ring-zinc-200/70">
+      <div v-for="r in rows" :key="r.id" class="flex items-center justify-between gap-4 p-4 text-sm transition hover:bg-elevated/40">
         <div>
           <span class="font-medium text-highlighted">{{ r.action }}</span>
           <span class="text-muted"> · target {{ r.targetId || '—' }}</span>

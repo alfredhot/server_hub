@@ -66,42 +66,48 @@ function roleColor(role?: string | null) {
 
 <template>
   <div>
-    <div class="mb-4 flex items-center justify-between">
-      <h1 class="text-xl font-bold text-highlighted">用户管理</h1>
-      <UButton icon="i-lucide-plus" label="新建用户" @click="open = true" />
+    <div class="mb-6 flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-semibold tracking-tight text-highlighted">用户管理</h1>
+        <p class="mt-1 text-sm text-muted">创建用户、调整角色与功能授权。</p>
+      </div>
+      <UButton icon="i-lucide-plus" label="新建用户" color="neutral" @click="open = true" />
     </div>
 
     <div v-if="loading" class="text-muted">加载中…</div>
 
     <div
       v-else-if="!users.length"
-      class="rounded-xl border border-dashed border-default py-16 text-center text-muted"
+      class="rounded-2xl border border-dashed border-default py-16 text-center text-muted"
     >
       还没有其他用户
     </div>
 
-    <div v-else class="overflow-hidden rounded-xl border border-default bg-default">
+    <div v-else class="overflow-hidden rounded-2xl bg-default shadow-sm ring-1 ring-zinc-200/70">
       <table class="w-full text-sm">
-        <thead class="bg-elevated text-left text-muted">
+        <thead class="bg-elevated/60 text-left text-muted">
           <tr>
-            <th class="p-3 font-medium">邮箱</th>
-            <th class="p-3 font-medium">姓名</th>
-            <th class="p-3 font-medium">角色</th>
-            <th class="p-3 font-medium">状态</th>
-            <th class="p-3 font-medium">操作</th>
+            <th class="px-4 py-3 font-medium">邮箱</th>
+            <th class="px-4 py-3 font-medium">姓名</th>
+            <th class="px-4 py-3 font-medium">角色</th>
+            <th class="px-4 py-3 font-medium">状态</th>
+            <th class="px-4 py-3 font-medium">操作</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="u in users" :key="u.id" class="border-t border-default">
-            <td class="p-3 text-highlighted">{{ u.email }}</td>
-            <td class="p-3">{{ u.name }}</td>
-            <td class="p-3">
+          <tr v-for="u in users" :key="u.id" class="border-t border-zinc-200/60 transition hover:bg-elevated/40">
+            <td class="px-4 py-3 text-highlighted">{{ u.email }}</td>
+            <td class="px-4 py-3">{{ u.name }}</td>
+            <td class="px-4 py-3">
               <UBadge :color="roleColor(u.role)" variant="subtle" :label="u.role || 'user'" />
             </td>
-            <td class="p-3">
-              <span :class="u.banned ? 'text-error' : 'text-success'">{{ u.banned ? '已封禁' : '正常' }}</span>
+            <td class="px-4 py-3">
+              <span class="inline-flex items-center gap-1.5" :class="u.banned ? 'text-error' : 'text-success'">
+                <span class="size-1.5 rounded-full" :class="u.banned ? 'bg-error' : 'bg-success'" />
+                {{ u.banned ? '已封禁' : '正常' }}
+              </span>
             </td>
-            <td class="p-3">
+            <td class="px-4 py-3">
               <div class="flex items-center gap-2">
                 <USelect
                   :model-value="u.role || 'user'"

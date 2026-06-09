@@ -34,13 +34,14 @@ async function submit() {
 </script>
 
 <template>
-  <UCard class="w-full max-w-sm">
-    <template #header>
-      <div class="text-center">
-        <div class="text-xl font-bold text-highlighted">Server Hub</div>
-        <div class="mt-1 text-sm text-muted">请登录以继续</div>
-      </div>
-    </template>
+  <div class="rounded-2xl bg-default p-7 shadow-xl shadow-zinc-200/50 ring-1 ring-zinc-200/70">
+    <div class="mb-6 flex flex-col items-center text-center">
+      <span class="mb-3 flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-violet-500 shadow-sm">
+        <UIcon name="i-lucide-layout-grid" class="size-6 text-white" />
+      </span>
+      <div class="text-lg font-semibold tracking-tight text-highlighted">欢迎回来</div>
+      <div class="mt-1 text-sm text-muted">登录 Server Hub 继续</div>
+    </div>
 
     <form class="space-y-4" @submit.prevent="submit">
       <UAlert
@@ -56,6 +57,8 @@ async function submit() {
           type="email"
           autocomplete="email"
           placeholder="you@example.com"
+          icon="i-lucide-mail"
+          size="lg"
           class="w-full"
         />
       </UFormField>
@@ -65,10 +68,12 @@ async function submit() {
           type="password"
           autocomplete="current-password"
           placeholder="••••••••"
+          icon="i-lucide-lock"
+          size="lg"
           class="w-full"
         />
       </UFormField>
-      <UButton type="submit" block :loading="loading" label="登录" />
+      <UButton type="submit" block size="lg" color="neutral" :loading="loading" label="登录" />
     </form>
-  </UCard>
+  </div>
 </template>

@@ -61,20 +61,20 @@ async function save() {
   <div class="max-w-2xl">
     <UButton to="/admin/users" icon="i-lucide-arrow-left" label="返回用户列表" variant="link" class="mb-3 px-0" />
 
-    <div class="mb-4 flex items-center gap-3">
-      <div class="flex size-9 items-center justify-center rounded-full bg-elevated font-bold text-primary">
+    <div class="mb-5 flex items-center gap-3">
+      <div class="flex size-11 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-violet-500 text-lg font-semibold text-white shadow-sm">
         {{ (userInfo?.name || userInfo?.email || '?').charAt(0).toUpperCase() }}
       </div>
       <div>
-        <div class="font-bold text-highlighted">{{ userInfo?.name || '—' }}</div>
+        <div class="font-semibold text-highlighted">{{ userInfo?.name || '—' }}</div>
         <div class="text-xs text-muted">{{ userInfo?.email }} · {{ userInfo?.role || 'user' }}</div>
       </div>
     </div>
 
     <div class="mb-2 text-sm text-muted">功能授权（逐项开关，并勾选该功能内权限）</div>
 
-    <div class="divide-y divide-default rounded-xl border border-default bg-default">
-      <div v-for="f in FEATURES" :key="f.key" class="flex items-center justify-between gap-4 p-3">
+    <div class="divide-y divide-zinc-200/60 overflow-hidden rounded-2xl bg-default shadow-sm ring-1 ring-zinc-200/70">
+      <div v-for="f in FEATURES" :key="f.key" class="flex items-center justify-between gap-4 p-4 transition hover:bg-elevated/40">
         <div class="flex items-center gap-3">
           <USwitch v-model="grants[f.key].enabled" />
           <div>
@@ -96,8 +96,8 @@ async function save() {
     </div>
 
     <div class="mt-4 flex items-center justify-end gap-3">
-      <span v-if="saved" class="text-sm text-success">已保存</span>
-      <UButton label="保存权限" :loading="saving" @click="save" />
+      <span v-if="saved" class="inline-flex items-center gap-1 text-sm text-success"><UIcon name="i-lucide-check" class="size-4" />已保存</span>
+      <UButton label="保存权限" color="neutral" :loading="saving" @click="save" />
     </div>
   </div>
 </template>
